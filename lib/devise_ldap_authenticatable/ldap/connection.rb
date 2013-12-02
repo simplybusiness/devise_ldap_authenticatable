@@ -10,13 +10,6 @@ module Devise
         ldap_config["ssl"] = :simple_tls if ldap_config["ssl"] === true
         ldap_options[:encryption] = ldap_config["ssl"].to_sym if ldap_config["ssl"]
 
-        ldap = Net::LDAP.new(ldap_options)
-        ldap.host = ldap_config["host"]
-        ldap.port = ldap_config["port"]
-        ldap.base = ldap_config["base"]
-
-        ldap.auth ldap_config["admin_user"], ldap_config["admin_password"] if ldap_options[:admin]
-        self.ldap = ldap
         self.ldap_config = ldap_config
         self.ldap_options = ldap_options
 
@@ -34,7 +27,17 @@ module Devise
       end
 
       def ldap
-        @ldap
+        @ldap ||= ldap_connection
+      end
+
+      def ldap_connection
+	ldap = Net::LDAP.new(ldap_options)
+	ldap.host = ldap_config["host"]
+	ldap.port = ldap_config["port"]
+	ldap.base = ldap_config["base"]
+
+	ldap.auth ldap_config["admin_user"], ldap_config["admin_password"] if ldap_options[:admin]
+	ldap
       end
 
       def delete_param(param)
@@ -49,7 +52,7 @@ module Devise
         DeviseLdapAuthenticatable::Logger.send("LDAP dn lookup: #{@attribute}=#{@login}")
         ldap_entry = search_for_login
         if ldap_entry.nil?
-          @ldap_auth_username_builder.call(@attribute,@login,@ldap)
+          @ldap_auth_username_builder.call(@attribute,@login,ldap)
         else
           ldap_entry.dn
         end
