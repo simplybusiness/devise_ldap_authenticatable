@@ -15,7 +15,7 @@ module Devise
         ldap.port = ldap_config["port"]
         ldap.base = ldap_config["base"]
 
-        ldap.auth ldap_config["admin_user"], ldap_config["admin_password"] if params[:admin]
+        ldap.auth ldap_config["admin_user"], ldap_config["admin_password"] if ldap_options[:admin]
         self.ldap = ldap
         self.ldap_config = ldap_config
         self.ldap_options = ldap_options
