@@ -1,8 +1,8 @@
 module Devise
   module LDAP
     class Connection
-      attr_reader :ldap, :login
-      attr_writer :ldap
+      attr_reader :login
+      attr_accessor :ldap, :ldap_config, :ldap_options
 
       def initialize(params = {})
         ldap_config = YAML.load(ERB.new(File.read(::Devise.ldap_config || "#{Rails.root}/config/ldap.yml")).result)[Rails.env]
@@ -14,8 +14,11 @@ module Devise
         ldap.host = ldap_config["host"]
         ldap.port = ldap_config["port"]
         ldap.base = ldap_config["base"]
+
         ldap.auth ldap_config["admin_user"], ldap_config["admin_password"] if params[:admin]
         self.ldap = ldap
+        self.ldap_config = ldap_config
+        self.ldap_options = ldap_options
 
         @attribute = ldap_config["attribute"]
         @ldap_auth_username_builder = params[:ldap_auth_username_builder]
