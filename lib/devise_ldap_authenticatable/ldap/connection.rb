@@ -4,9 +4,8 @@ module Devise
       attr_reader :login
       attr_accessor :ldap, :ldap_config, :ldap_options
 
-      def initialize(params = {})
+      def initialize(ldap_options = {})
         ldap_config = YAML.load(ERB.new(File.read(::Devise.ldap_config || "#{Rails.root}/config/ldap.yml")).result)[Rails.env]
-        ldap_options = params
         ldap_config["ssl"] = :simple_tls if ldap_config["ssl"] === true
         ldap_options[:encryption] = ldap_config["ssl"].to_sym if ldap_config["ssl"]
 
@@ -21,16 +20,16 @@ module Devise
         self.ldap_options = ldap_options
 
         @attribute = ldap_config["attribute"]
-        @ldap_auth_username_builder = params[:ldap_auth_username_builder]
+        @ldap_auth_username_builder = ldap_options[:ldap_auth_username_builder]
 
         @group_base = ldap_config["group_base"]
         @check_group_membership = ldap_config.has_key?("check_group_membership") ? ldap_config["check_group_membership"] : ::Devise.ldap_check_group_membership
         @required_groups = ldap_config["required_groups"]
         @required_attributes = ldap_config["require_attribute"]
 
-        @login = params[:login]
-        @password = params[:password]
-        @new_password = params[:new_password]
+        @login = ldap_options[:login]
+        @password = ldap_options[:password]
+        @new_password = ldap_options[:new_password]
       end
 
       def delete_param(param)
