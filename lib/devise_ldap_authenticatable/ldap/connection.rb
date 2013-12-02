@@ -27,17 +27,7 @@ module Devise
       end
 
       def ldap
-        @ldap ||= ldap_connection
-      end
-
-      def ldap_connection
-	ldap = Net::LDAP.new(ldap_options)
-	ldap.host = ldap_config["host"]
-	ldap.port = ldap_config["port"]
-	ldap.base = ldap_config["base"]
-
-	ldap.auth ldap_config["admin_user"], ldap_config["admin_password"] if ldap_options[:admin]
-	ldap
+        @ldap ||= Wrapper.new(ldap_options, ldap_config)
       end
 
       def delete_param(param)
