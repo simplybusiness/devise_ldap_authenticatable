@@ -2,7 +2,8 @@ module Devise
   module LDAP
     class Connection
       attr_reader :login
-      attr_accessor :ldap, :ldap_config, :ldap_options
+      attr_writer :ldap
+      attr_accessor :ldap_config, :ldap_options
 
       def initialize(ldap_options = {})
         ldap_config = YAML.load(ERB.new(File.read(::Devise.ldap_config || "#{Rails.root}/config/ldap.yml")).result)[Rails.env]
@@ -30,6 +31,10 @@ module Devise
         @login = ldap_options[:login]
         @password = ldap_options[:password]
         @new_password = ldap_options[:new_password]
+      end
+
+      def ldap
+        @ldap
       end
 
       def delete_param(param)
