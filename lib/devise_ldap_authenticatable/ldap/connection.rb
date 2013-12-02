@@ -14,7 +14,9 @@ module Devise
         ldap.host = ldap_config["host"]
         ldap.port = ldap_config["port"]
         ldap.base = ldap_config["base"]
+        ldap.auth ldap_config["admin_user"], ldap_config["admin_password"] if params[:admin]
         self.ldap = ldap
+
         @attribute = ldap_config["attribute"]
         @ldap_auth_username_builder = params[:ldap_auth_username_builder]
 
@@ -22,8 +24,6 @@ module Devise
         @check_group_membership = ldap_config.has_key?("check_group_membership") ? ldap_config["check_group_membership"] : ::Devise.ldap_check_group_membership
         @required_groups = ldap_config["required_groups"]
         @required_attributes = ldap_config["require_attribute"]
-
-        ldap.auth ldap_config["admin_user"], ldap_config["admin_password"] if params[:admin]
 
         @login = params[:login]
         @password = params[:password]
