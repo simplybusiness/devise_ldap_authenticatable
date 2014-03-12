@@ -78,7 +78,7 @@ module Devise
           begin
             ::DeviseLdapAuthenticatable::Logger.send "CURRENT SERVER = #{current_server.inspect}"
             return yield ldap_connection
-          rescue Net::LDAP::LdapError
+          rescue
             failover
             if current_server == i
               ::DeviseLdapAuthenticatable::Logger.send "I have exhaused all servers, raising exception"
