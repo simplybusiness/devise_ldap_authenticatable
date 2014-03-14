@@ -43,12 +43,12 @@ module Devise
 
       def connect_to_ldap
         ldap = Net::LDAP.new options
-	ldap.host = connect_host
-	ldap.port = connect_port
-	ldap.base = config["base"]
+        ldap.host = connect_host
+        ldap.port = connect_port
+        ldap.base = config["base"]
 
-	ldap.auth config["admin_user"], config["admin_password"] if options[:admin]
-	ldap
+        ldap.auth config["admin_user"], config["admin_password"] if options[:admin]
+        ldap
       end
 
       def select_next_server
@@ -78,11 +78,11 @@ module Devise
           begin
             ::DeviseLdapAuthenticatable::Logger.send "CURRENT SERVER = #{current_server.inspect}"
             return yield ldap_connection
-          rescue
+          rescue StandardError => error
             failover
             if current_server == i
               ::DeviseLdapAuthenticatable::Logger.send "I have exhaused all servers, raising exception"
-              raise Net::LDAP::LdapError.new("All servers are down")
+              raise error, "#{error.message}. Tried all servers"
             end
             ::DeviseLdapAuthenticatable::Logger.send "FAILING OVER to #{current_server.inspect}"
           end
