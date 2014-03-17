@@ -52,7 +52,7 @@ module Devise
       end
 
       def select_next_server
-        @current_server_index = (@current_server_index + 1) % servers.size
+        @current_server_index = (current_server_index + 1) % servers.size
       end
 
       def failover

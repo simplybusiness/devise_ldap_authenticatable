@@ -276,9 +276,9 @@ describe 'Users' do
           end
         end
 
-	it "raises an exception" do
-          expect { @user.valid_ldap_authentication?("secret") }.to raise_error(Net::LDAP::LdapError, "All servers are down")
-	end
+        it "raises an exception" do
+          expect { @user.valid_ldap_authentication?("secret") }.to raise_error(Net::LDAP::LdapError, /Tried all servers/)
+        end
       end
 
       describe "when the current server goes down" do
@@ -291,10 +291,10 @@ describe 'Users' do
           end
         end
 
-	it "fails over to the next server" do
+        it "fails over to the next server" do
           should_be_validated @user, "secret"
           should_be_validated @admin, "admin_secret"
-	end
+        end
       end
     end
   end
