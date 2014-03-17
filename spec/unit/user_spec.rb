@@ -277,7 +277,7 @@ describe 'Users' do
         end
 
         it "raises an exception" do
-          expect { @user.valid_ldap_authentication?("secret") }.to raise_error(Net::LDAP::LdapError, /Tried all servers/)
+          expect { @user.valid_ldap_authentication?("secret") }.to raise_error(Net::LDAP::LdapError)
         end
       end
 

@@ -82,7 +82,7 @@ module Devise
             failover
             if current_server == i
               ::DeviseLdapAuthenticatable::Logger.send "I have exhaused all servers, raising exception"
-              raise error, "#{error.message}. Tried all servers"
+              raise error
             end
             ::DeviseLdapAuthenticatable::Logger.send "FAILING OVER to #{current_server.inspect}"
           end
