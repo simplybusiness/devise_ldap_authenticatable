@@ -21,11 +21,12 @@ File.open(ssl_out, 'w') do |f|
   f.write ERB.new(template).result(binding)
 end
 
-if ARGV.first == '--ssl'
-  cmd = "slapd -d 1 -f #{ssl_out} -h ldaps://localhost:3389"
+config_file = if ARGV.first == '--ssl'
+  ssl_out
 else
-  cmd = "slapd -d 1 -f #{normal_out} -h ldap://localhost:3389"
+  normal_out
 end
 
+cmd = "slapd -d 1 -f %s -h 'ldap://localhost:3389 ldap://localhost:3390'" % config_file
 puts(cmd)
 exec(cmd)

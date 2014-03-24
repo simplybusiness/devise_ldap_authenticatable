@@ -1,31 +1,33 @@
 module Devise
   module LDAP
     class Connection
-      attr_reader :ldap, :login
+      attr_reader :login
+      attr_writer :ldap
+      attr_accessor :ldap_config, :ldap_options
 
-      def initialize(params = {})
+      def initialize(ldap_options = {})
         ldap_config = YAML.load(ERB.new(File.read(::Devise.ldap_config || "#{Rails.root}/config/ldap.yml")).result)[Rails.env]
-        ldap_options = params
         ldap_config["ssl"] = :simple_tls if ldap_config["ssl"] === true
         ldap_options[:encryption] = ldap_config["ssl"].to_sym if ldap_config["ssl"]
 
-        @ldap = Net::LDAP.new(ldap_options)
-        @ldap.host = ldap_config["host"]
-        @ldap.port = ldap_config["port"]
-        @ldap.base = ldap_config["base"]
+        self.ldap_config = ldap_config
+        self.ldap_options = ldap_options
+
         @attribute = ldap_config["attribute"]
-        @ldap_auth_username_builder = params[:ldap_auth_username_builder]
+        @ldap_auth_username_builder = ldap_options[:ldap_auth_username_builder]
 
         @group_base = ldap_config["group_base"]
         @check_group_membership = ldap_config.has_key?("check_group_membership") ? ldap_config["check_group_membership"] : ::Devise.ldap_check_group_membership
         @required_groups = ldap_config["required_groups"]
         @required_attributes = ldap_config["require_attribute"]
 
-        @ldap.auth ldap_config["admin_user"], ldap_config["admin_password"] if params[:admin]
+        @login = ldap_options[:login]
+        @password = ldap_options[:password]
+        @new_password = ldap_options[:new_password]
+      end
 
-        @login = params[:login]
-        @password = params[:password]
-        @new_password = params[:new_password]
+      def ldap
+        @ldap ||= Wrapper.new(ldap_options, ldap_config)
       end
 
       def delete_param(param)
@@ -40,7 +42,7 @@ module Devise
         DeviseLdapAuthenticatable::Logger.send("LDAP dn lookup: #{@attribute}=#{@login}")
         ldap_entry = search_for_login
         if ldap_entry.nil?
-          @ldap_auth_username_builder.call(@attribute,@login,@ldap)
+          @ldap_auth_username_builder.call(@attribute,@login,ldap)
         else
           ldap_entry.dn
         end
@@ -49,7 +51,7 @@ module Devise
       def ldap_param_value(param)
         filter = Net::LDAP::Filter.eq(@attribute.to_s, @login.to_s)
         ldap_entry = nil
-        @ldap.search(:filter => filter) {|entry| ldap_entry = entry}
+        ldap.search(:filter => filter) {|entry| ldap_entry = entry}
 
         if ldap_entry
           unless ldap_entry[param].empty?
@@ -67,8 +69,8 @@ module Devise
       end
 
       def authenticate!
-        @ldap.auth(dn, @password)
-        @ldap.bind
+        ldap.auth(dn, @password)
+        ldap.bind
       end
 
       def authenticated?
@@ -178,7 +180,7 @@ module Devise
         filter = Net::LDAP::Filter.eq(@attribute.to_s, @login.to_s)
         ldap_entry = nil
         match_count = 0
-        @ldap.search(:filter => filter) {|entry| ldap_entry = entry; match_count+=1}
+        ldap.search(:filter => filter) {|entry| ldap_entry = entry; match_count+=1}
         DeviseLdapAuthenticatable::Logger.send("LDAP search yielded #{match_count} matches")
         ldap_entry
       end

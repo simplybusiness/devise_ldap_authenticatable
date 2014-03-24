@@ -5,6 +5,7 @@ require 'devise_ldap_authenticatable/exception'
 require 'devise_ldap_authenticatable/logger'
 require 'devise_ldap_authenticatable/ldap/adapter'
 require 'devise_ldap_authenticatable/ldap/connection'
+require 'devise_ldap_authenticatable/ldap/wrapper'
 
 # Get ldap information from config/ldap.yml now
 module Devise

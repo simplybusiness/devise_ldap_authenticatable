@@ -251,6 +251,54 @@ describe 'Users' do
     end
   end
 
+  describe "with failover hosts in the config file" do
+    before do
+      default_devise_settings!
+      reset_ldap_server!
+      ::Devise.ldap_config = "#{Rails.root}/config/ldap_with_failover.yml"
+    end
+
+    describe "authenticate" do
+      before do
+        @admin = Factory.create(:admin)
+        @user = Factory.create(:user)
+      end
+
+      it "should be able to authenticate" do
+        should_be_validated @user, "secret"
+        should_be_validated @admin, "admin_secret"
+      end
+
+      describe "when all servers are down" do
+        before :each do
+          Net::LDAP.any_instance.stub(:search) do |a|
+            raise Net::LDAP::LdapError.new("No such address or other socket error") 
+          end
+        end
+
+        it "raises an exception" do
+          expect { @user.valid_ldap_authentication?("secret") }.to raise_error(Net::LDAP::LdapError)
+        end
+      end
+
+      describe "when the current server goes down" do
+        before :each do
+          Net::LDAP.any_instance.stub(:search) do |a|
+            unless defined? @first_server
+              @first_server = true
+              raise Net::LDAP::LdapError.new("No such address or other socket error") 
+            end
+          end
+        end
+
+        it "fails over to the next server" do
+          should_be_validated @user, "secret"
+          should_be_validated @admin, "admin_secret"
+        end
+      end
+    end
+  end
+
   describe "using ERB in the config file" do
     before do
       default_devise_settings!

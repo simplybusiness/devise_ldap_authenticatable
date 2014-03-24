@@ -21,7 +21,7 @@ def ldap_connect_string
   if ENV["LDAP_SSL"]
     "-x -H ldaps://localhost:3389 -D 'cn=admin,dc=test,dc=com' -w secret"
   else
-    "-x -h localhost -p 3389 -D 'cn=admin,dc=test,dc=com' -w secret"
+    "-h localhost -p 3389 -D 'cn=admin,dc=test,dc=com' -w secret"
   end
 end
 
