@@ -140,25 +140,25 @@ describe 'Users' do
         should_not_be_validated @user, "secret"
       end
     end
-    
+
     describe "check group membership" do
       before do
         @admin = Factory.create(:admin)
         @user = Factory.create(:user)
       end
-      
+
       it "should return true for admin being in the admins group" do
         assert_equal true, @admin.in_ldap_group?('cn=admins,ou=groups,dc=test,dc=com')
       end
-      
+
       it "should return false for admin being in the admins group using the 'foobar' group attribute" do
         assert_equal false, @admin.in_ldap_group?('cn=admins,ou=groups,dc=test,dc=com', 'foobar')
       end
-      
+
       it "should return true for user being in the users group" do
         assert_equal true, @user.in_ldap_group?('cn=users,ou=groups,dc=test,dc=com')
-      end   
-      
+      end
+
       it "should return false for user being in the admins group" do
         assert_equal false, @user.in_ldap_group?('cn=admins,ou=groups,dc=test,dc=com')
       end
@@ -167,7 +167,7 @@ describe 'Users' do
         assert_equal false, @user.in_ldap_group?('cn=thisgroupdoesnotexist,ou=groups,dc=test,dc=com')
       end
     end
-    
+
 
     describe "use role attribute for authorization" do
       before do
@@ -244,9 +244,7 @@ describe 'Users' do
       end
 
       it "should not call ldap_before_save hook if not defined" do
-        assert_nothing_raised do
           should_be_validated Factory.create(:user, :uid => "example_user"), "secret"
-        end
       end
     end
   end
@@ -272,7 +270,7 @@ describe 'Users' do
       describe "when all servers are down" do
         before :each do
           Net::LDAP.any_instance.stub(:search) do |a|
-            raise Net::LDAP::LdapError.new("No such address or other socket error") 
+            raise Net::LDAP::LdapError.new("No such address or other socket error")
           end
         end
 
@@ -286,7 +284,7 @@ describe 'Users' do
           Net::LDAP.any_instance.stub(:search) do |a|
             unless defined? @first_server
               @first_server = true
-              raise Net::LDAP::LdapError.new("No such address or other socket error") 
+              raise Net::LDAP::LdapError.new("No such address or other socket error")
             end
           end
         end
@@ -327,9 +325,7 @@ describe 'Users' do
     end
 
     it "should not fail if config file has ssl: true" do
-      assert_nothing_raised do
         Devise::LDAP::Connection.new
-      end
     end
   end
 
@@ -345,6 +341,30 @@ describe 'Users' do
 
     it "should be able to authenticate" do
       should_be_validated @other, "other_secret"
+    end
+  end
+
+  describe 'SSL' do
+
+    let(:context){ double }
+    let(:connection) { double.as_null_object }
+    let(:user){ Factory.create(:user) }
+
+    before do
+      allow(ENV).to receive(:[]).with("LDAP_SSL").and_return(true)
+      default_devise_settings!
+    end
+
+    it 'uses the TLS version of SSL' do
+      expect(OpenSSL::SSL::SSLContext).to receive(:new).with(:TLSv1).and_return(context)
+      expect(OpenSSL::SSL::SSLSocket).to receive(:new).with(anything(), context).and_return(connection)
+      expect(connection).to receive(:connect)
+      begin
+        user.valid_ldap_authentication?('x')
+      rescue => e
+        # We expect this error as SSL is not properly set on the fake server so ignore it
+        raise unless e.message == 'Failover is not configured'
+      end
     end
   end
 
