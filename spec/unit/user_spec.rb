@@ -353,7 +353,6 @@ describe 'Users' do
     before do
       allow(ENV).to receive(:[]).with("LDAP_SSL").and_return(true)
       default_devise_settings!
-      allow_any_instance_of(Devise::LDAP::Wrapper).to receive(:each_server).and_return([])
     end
 
     it 'uses the TLS version of SSL' do
@@ -362,8 +361,9 @@ describe 'Users' do
       expect(connection).to receive(:connect)
       begin
         user.valid_ldap_authentication?('x')
-      rescue => _
-        # Connection won't really happen an an exception will
+      rescue => e
+        # We expect this error as SSL is not properly set on the fake server so ignore it
+        raise unless e.message == 'Failover is not configured'
       end
     end
   end
