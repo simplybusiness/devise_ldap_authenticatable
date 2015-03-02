@@ -5,8 +5,7 @@ module Devise
     class SSLConnextionFactory
       def self.new_ssl_connection(io)
         raise Net::LDAP::LdapError, "OpenSSL is unavailable" unless Net::LDAP::HasOpenSSL
-        ctx = OpenSSL::SSL::SSLContext.new
-        ctx.ssl_version = :TLSv1
+        ctx = OpenSSL::SSL::SSLContext.new(:TLSv1)
         conn = OpenSSL::SSL::SSLSocket.new(io, ctx)
         conn.connect
         conn.sync_close = true

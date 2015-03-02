@@ -344,4 +344,28 @@ describe 'Users' do
     end
   end
 
+  describe 'SSL' do
+
+    let(:context){ double }
+    let(:connection) { double.as_null_object }
+    let(:user){ Factory.create(:user) }
+
+    before do
+      allow(ENV).to receive(:[]).with("LDAP_SSL").and_return(true)
+      default_devise_settings!
+      allow_any_instance_of(Devise::LDAP::Wrapper).to receive(:each_server).and_return([])
+    end
+
+    it 'uses the TLS version of SSL' do
+      expect(OpenSSL::SSL::SSLContext).to receive(:new).with(:TLSv1).and_return(context)
+      expect(OpenSSL::SSL::SSLSocket).to receive(:new).with(anything(), context).and_return(connection)
+      expect(connection).to receive(:connect)
+      begin
+        user.valid_ldap_authentication?('x')
+      rescue => _
+        # Connection won't really happen an an exception will
+      end
+    end
+  end
+
 end
