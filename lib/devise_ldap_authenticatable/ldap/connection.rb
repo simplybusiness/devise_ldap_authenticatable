@@ -13,7 +13,15 @@ module Devise
         end
         ldap_options = params
         ldap_config["ssl"] = :simple_tls if ldap_config["ssl"] === true
-        ldap_options[:encryption] = ldap_config["ssl"].to_sym if ldap_config["ssl"]
+        if ldap_config["ssl"]
+          ldap_options[:encryption] = {
+            method: ldap_config["ssl"],
+            tls_options: {
+              ssl_version: :TLSv1,
+              verify_mode: OpenSSL::SSL::VERIFY_NONE
+            }
+          }
+        end
         self.ldap_config = ldap_config
         self.ldap_options = ldap_options
 
